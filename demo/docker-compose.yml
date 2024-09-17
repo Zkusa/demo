@@ -1,0 +1,44 @@
+services:
+  vncorenlp:
+    build: .
+    ports:
+      - "9000:80"
+    container_name: vncorenlp
+    networks:
+      - deploy_network
+
+  nginx:
+    image: nginx:1.19.6
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - vncorenlp
+    ports:
+      - "8030:80"
+    container_name: nginx
+    networks:
+      - deploy_network
+
+  fastapi:
+    build: src/api/
+    ports: 
+      - "8000:8000"
+    depends_on:
+      - nginx
+    container_name: fastapi
+    networks:
+      - deploy_network
+
+  streamlit:
+    build: src/gui/
+    depends_on:
+      - fastapi
+    ports: 
+        - "8501:8501"
+    container_name: streamlit
+    networks:
+      - deploy_network
+
+networks:
+  deploy_network:
+    driver: bridge
